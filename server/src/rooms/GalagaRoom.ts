@@ -2,25 +2,33 @@ import { Room, Client } from "@colyseus/core";
 import { GameState } from "shared/schemas/GameState";
 import { PlayerState } from "shared/schemas/PlayerState";
 import { InputEvent, JoinOptions } from "shared/types/events";
+import { GameLoop } from "../game/GameLoop";
 
 const TICK_MS = 1000 / 60;
 const WORLD_W = 800;
 const WORLD_H = 600;
 
 export class GalagaRoom extends Room<GameState> {
+  private loop: GameLoop | null = null;
+
   onCreate() {
     this.setState(new GameState());
 
-    this.onMessage("input", (_client: Client, _input: InputEvent) => {
-      // wired in Task 4
+    this.onMessage("input", (client: Client, input: InputEvent) => {
+      this.loop?.handleInput(client.sessionId, input);
     });
 
     this.onMessage("start", (_client: Client) => {
       if (this.state.phase !== "lobby") return;
       this.state.phase = "playing";
+      this.loop = new GameLoop(this.state);
     });
 
-    this.setSimulationInterval((_dt: number) => {}, TICK_MS);
+    this.setSimulationInterval((dt: number) => {
+      if (this.state.phase !== "playing") return;
+      this.loop!.update(dt);
+      if (this.loop!.isGameOver()) this.state.phase = "gameover";
+    }, TICK_MS);
   }
 
   onJoin(client: Client, options: JoinOptions = {}) {
