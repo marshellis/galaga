@@ -1,9 +1,15 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "dist",
     "paths": { "shared/*": ["../shared/src/*"] }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "CommonJS",
+      "experimentalDecorators": true
+    }
+  }
 }
