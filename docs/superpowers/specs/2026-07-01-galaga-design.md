@@ -37,7 +37,7 @@ Players choose one sub-type in the lobby before the match:
 |----------|-------------|
 | **Shared Lives** | One life pool for the whole team. Team dies when the pool hits zero. |
 | **Independent Lives + Shared Score** | Each player has their own lives; all kills contribute to one combined score/wave goal. |
-| **Role Specialization** | Players pick a role: Shooter (standard), Shield (absorbs enemy fire, reduced attack), Bomber (slow fire, area damage). At least one of each role must be filled before the game can start; additional players beyond the first three default to Shooter. |
+| **Role Specialization** | Players pick a role from four options. Each player has **2 HP** (exclusive to this mode — other modes use the standard lives system). At least one of each non-Shooter role must be claimed before the game can start; additional players default to Shooter. Roles: **Shooter** (standard fire, 2 HP), **Shield** (absorbs enemy fire, reduced attack, 2 HP), **Bomber** (slow fire, area damage, 2 HP), **Healer** (pressing fire resurrects the most recently killed teammate with 1 HP, cooldown 5 seconds). |
 
 ### Competitive Modes
 
@@ -120,7 +120,7 @@ The game world always fills the player's screen (fullscreen). As more players jo
 Imported by both client and server — the contract between the two developers:
 
 - **Colyseus Schema classes:** `GameState`, `PlayerState`, `EnemyState`, `BulletState`
-- **TypeScript enums/types:** `GameMode`, `CoopSubtype`, `CompetitiveSubtype`, `PlayerRole`
+- **TypeScript enums/types:** `GameMode`, `CoopSubtype`, `CompetitiveSubtype`, `PlayerRole` (`Shooter | Shield | Bomber | Healer`)
 
 ---
 
