@@ -37,7 +37,7 @@ Players choose one sub-type in the lobby before the match:
 |----------|-------------|
 | **Shared Lives** | One life pool for the whole team. Team dies when the pool hits zero. |
 | **Independent Lives + Shared Score** | Each player has their own lives; all kills contribute to one combined score/wave goal. |
-| **Role Specialization** | Players pick a role from four options. Each player has **2 HP** (exclusive to this mode — other modes use the standard lives system). At least one of each non-Shooter role must be claimed before the game can start; additional players default to Shooter. Roles: **Shooter** (standard fire, 2 HP), **Shield** (absorbs enemy fire, reduced attack, 2 HP), **Bomber** (slow fire, area damage, 2 HP), **Healer** (pressing fire resurrects the most recently killed teammate with 1 HP, cooldown 5 seconds). |
+| **Role Specialization** | Players pick a role from four options. Each player has **2 HP** (exclusive to this mode — other modes use the standard lives system). At least one Shield, Bomber, and Healer must be claimed before the game can start; additional players default to Shooter. Roles: **Shooter** (picks a shot type — see below), **Shield** (absorbs enemy fire, reduced attack, 2 HP), **Bomber** (slow fire, area damage, 2 HP), **Healer** (pressing fire resurrects the most recently killed teammate with 1 HP, cooldown 5 seconds). **Shooter shot types** (chosen at role-select): **Rapid** — fast small bullet, high fire rate, standard damage; **Heavy** — slow large bullet, low fire rate, 2× damage (kills boss enemies in one hit); **Spread** — fires 3 bullets in a cone, medium speed, standard damage; **Piercing** — medium speed, bullet passes through multiple enemies dealing standard damage to each. |
 
 ### Competitive Modes
 
@@ -120,7 +120,7 @@ The game world always fills the player's screen (fullscreen). As more players jo
 Imported by both client and server — the contract between the two developers:
 
 - **Colyseus Schema classes:** `GameState`, `PlayerState`, `EnemyState`, `BulletState`
-- **TypeScript enums/types:** `GameMode`, `CoopSubtype`, `CompetitiveSubtype`, `PlayerRole` (`Shooter | Shield | Bomber | Healer`)
+- **TypeScript enums/types:** `GameMode`, `CoopSubtype`, `CompetitiveSubtype`, `PlayerRole` (`Shooter | Shield | Bomber | Healer`), `ShooterShotType` (`Rapid | Heavy | Spread | Piercing`)
 
 ---
 
