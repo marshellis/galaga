@@ -1,9 +1,7 @@
 import { GameState } from "shared/schemas/GameState";
 import { EnemyType } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
-
-const PLAYER_HALF = 16;
-const ENEMY_HALF = 20;
+import { PLAYER_HALF, ENEMY_HALF } from "./constants";
 
 function overlaps(ax: number, ay: number, aw: number, bx: number, by: number, bw: number): boolean {
   return Math.abs(ax - bx) < (aw + bw) / 2 && Math.abs(ay - by) < (aw + bw) / 2;
@@ -24,7 +22,7 @@ export class CollisionDetector {
     this.state.bullets.forEach(bullet => {
       if (bullet.isEnemy) return;
       if (bulletsToRemove.includes(bullet.id)) return; // already consumed
-      const damage = bullet.width >= 10 ? 2 : 1;
+      const damage = this.bulletManager.damageOf(bullet.id);
 
       this.state.enemies.forEach(enemy => {
         if (enemiesToRemove.includes(enemy.id)) return; // already dead

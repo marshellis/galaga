@@ -6,6 +6,7 @@ export class InputHandler {
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd: Record<"up" | "down" | "left" | "right", Phaser.Input.Keyboard.Key>;
   private spaceKey: Phaser.Input.Keyboard.Key;
+  private prev: InputEvent = { left: false, right: false, up: false, down: false, fire: false };
 
   constructor(scene: Phaser.Scene) {
     const kb = scene.input.keyboard!;
@@ -27,6 +28,13 @@ export class InputHandler {
       down:  this.cursors.down.isDown  || this.wasd.down.isDown,
       fire:  this.spaceKey.isDown,
     };
-    colyseusClient.sendInput(input);
+    if (input.left  !== this.prev.left  ||
+        input.right !== this.prev.right ||
+        input.up    !== this.prev.up    ||
+        input.down  !== this.prev.down  ||
+        input.fire  !== this.prev.fire) {
+      colyseusClient.sendInput(input);
+      this.prev = input;
+    }
   }
 }

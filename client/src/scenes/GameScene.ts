@@ -7,6 +7,7 @@ import { BulletRenderer } from "../rendering/BulletRenderer";
 import { ExplosionRenderer } from "../rendering/ExplosionRenderer";
 import { HUD } from "../ui/HUD";
 import { GameState } from "shared/schemas/GameState";
+import { GamePhase } from "shared/types/enums";
 
 export class GameScene extends Phaser.Scene {
   private inputHandler!: InputHandler;
@@ -20,16 +21,29 @@ export class GameScene extends Phaser.Scene {
   constructor() { super({ key: "GameScene" }); }
 
   async create() {
-    this.playerRenderer   = new PlayerRenderer(this);
-    this.enemyRenderer    = new EnemyRenderer(this);
-    this.bulletRenderer   = new BulletRenderer(this);
+    this.playerRenderer    = new PlayerRenderer(this);
+    this.enemyRenderer     = new EnemyRenderer(this);
+    this.bulletRenderer    = new BulletRenderer(this);
     this.explosionRenderer = new ExplosionRenderer(this);
-    this.hud              = new HUD(this);
+    this.hud               = new HUD(this);
 
-    await colyseusClient.connect("Anonymous");
+    try {
+      await colyseusClient.connect("Anonymous");
+    } catch {
+      const cx = this.scale.width / 2;
+      const cy = this.scale.height / 2;
+      this.add.text(cx, cy - 20, "Could not connect to server.", {
+        fontSize: "20px", color: "#ff4444", fontFamily: "monospace",
+      }).setOrigin(0.5);
+      this.add.text(cx, cy + 20, "[ PRESS ENTER TO RETURN ]", {
+        fontSize: "16px", color: "#aaaaaa", fontFamily: "monospace",
+      }).setOrigin(0.5);
+      this.input.keyboard!.once("keydown-ENTER", () => this.scene.start("MenuScene"));
+      return;
+    }
+
     this.inputHandler = new InputHandler(this);
     colyseusClient.sendStart();
-
     colyseusClient.room!.onStateChange((state: GameState) => this.syncState(state));
   }
 
@@ -38,7 +52,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private syncState(state: GameState) {
-    if (state.phase === "gameover") {
+    if (state.phase === GamePhase.GameOver) {
       const me = state.players.get(colyseusClient.room!.sessionId);
       this.scene.start("GameOverScene", { score: me?.score ?? 0, wave: state.wave });
       return;
@@ -51,7 +65,9 @@ export class GameScene extends Phaser.Scene {
     this.prevEnemyIds.forEach(id => {
       if (!currentIds.has(id)) {
         const pos = this.enemyRenderer.getPosition(id);
-        if (pos) this.explosionRenderer.explode(pos.x, pos.y, false);
+        if (pos && pos.y < this.scale.height && pos.y > 0) {
+          this.explosionRenderer.explode(pos.x, pos.y, false);
+        }
       }
     });
     this.prevEnemyIds = currentIds;

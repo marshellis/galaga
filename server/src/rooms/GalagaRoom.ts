@@ -3,6 +3,7 @@ import { GameState } from "shared/schemas/GameState";
 import { PlayerState } from "shared/schemas/PlayerState";
 import { InputEvent, JoinOptions } from "shared/types/events";
 import { GameLoop } from "../game/GameLoop";
+import { GamePhase } from "shared/types/enums";
 
 const TICK_MS = 1000 / 60;
 const WORLD_W = 800;
@@ -19,15 +20,15 @@ export class GalagaRoom extends Room<GameState> {
     });
 
     this.onMessage("start", (_client: Client) => {
-      if (this.state.phase !== "lobby") return;
-      this.state.phase = "playing";
+      if (this.state.phase !== GamePhase.Lobby) return;
+      this.state.phase = GamePhase.Playing;
       this.loop = new GameLoop(this.state);
     });
 
     this.setSimulationInterval((dt: number) => {
-      if (this.state.phase !== "playing") return;
+      if (this.state.phase !== GamePhase.Playing) return;
       this.loop!.update(dt);
-      if (this.loop!.isGameOver()) this.state.phase = "gameover";
+      if (this.loop!.isGameOver()) this.state.phase = GamePhase.GameOver;
     }, TICK_MS);
   }
 

@@ -4,9 +4,7 @@ import { BulletManager } from "./BulletManager";
 import { EnemyManager } from "./EnemyManager";
 import { WaveManager } from "./WaveManager";
 import { CollisionDetector } from "./CollisionDetector";
-
-const PLAYER_SPEED = 220;
-const PLAYER_HALF = 16;
+import { PLAYER_SPEED, PLAYER_HALF } from "./constants";
 
 export class GameLoop {
   private inputs = new Map<string, InputEvent>();
