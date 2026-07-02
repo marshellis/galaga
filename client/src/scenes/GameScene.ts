@@ -42,9 +42,11 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    colyseusClient.room!.onStateChange((state: GameState) => this.syncState(state));
     this.inputHandler = new InputHandler(this);
     colyseusClient.sendStart();
-    colyseusClient.room!.onStateChange((state: GameState) => this.syncState(state));
+    // Sync current state immediately in case onStateChange already fired during connect
+    this.syncState(colyseusClient.room!.state as unknown as GameState);
   }
 
   update() {
@@ -61,7 +63,8 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setZoom(state.cameraZoom);
 
     // fire explosions for enemies that disappeared since last frame
-    const currentIds = new Set(state.enemies.map(e => e.id));
+    const currentIds = new Set<string>();
+    state.enemies.forEach((e: any) => currentIds.add(e.id));
     this.prevEnemyIds.forEach(id => {
       if (!currentIds.has(id)) {
         const pos = this.enemyRenderer.getPosition(id);
