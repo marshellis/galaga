@@ -3,20 +3,23 @@ import { InputEvent } from "shared/types/events";
 import { BulletManager } from "./BulletManager";
 import { EnemyManager } from "./EnemyManager";
 import { WaveManager } from "./WaveManager";
+import { CollisionDetector } from "./CollisionDetector";
 
 const PLAYER_SPEED = 220;
 const PLAYER_HALF = 16;
 
 export class GameLoop {
   private inputs = new Map<string, InputEvent>();
-  readonly bulletManager: BulletManager;
-  readonly enemyManager: EnemyManager;
+  private bulletManager: BulletManager;
+  private enemyManager: EnemyManager;
   private waveManager: WaveManager;
+  private collisionDetector: CollisionDetector;
 
   constructor(private state: GameState) {
     this.bulletManager = new BulletManager(state);
     this.enemyManager = new EnemyManager(state);
     this.enemyManager.setBulletManager(this.bulletManager);
+    this.collisionDetector = new CollisionDetector(state, this.bulletManager);
     this.waveManager = new WaveManager(state, this.enemyManager, state.players.size);
     this.waveManager.start();
   }
@@ -30,6 +33,7 @@ export class GameLoop {
     this.movePlayers(dt);
     this.bulletManager.update(dt);
     this.enemyManager.update(dt);
+    this.collisionDetector.check();
     this.waveManager.check();
   }
 
