@@ -1,6 +1,8 @@
 import { GameState } from "shared/schemas/GameState";
 import { InputEvent } from "shared/types/events";
 import { BulletManager } from "./BulletManager";
+import { EnemyManager } from "./EnemyManager";
+import { WaveManager } from "./WaveManager";
 
 const PLAYER_SPEED = 220;
 const PLAYER_HALF = 16;
@@ -8,9 +10,15 @@ const PLAYER_HALF = 16;
 export class GameLoop {
   private inputs = new Map<string, InputEvent>();
   readonly bulletManager: BulletManager;
+  readonly enemyManager: EnemyManager;
+  private waveManager: WaveManager;
 
   constructor(private state: GameState) {
     this.bulletManager = new BulletManager(state);
+    this.enemyManager = new EnemyManager(state);
+    this.enemyManager.setBulletManager(this.bulletManager);
+    this.waveManager = new WaveManager(state, this.enemyManager, state.players.size);
+    this.waveManager.start();
   }
 
   handleInput(sessionId: string, input: InputEvent) {
@@ -21,6 +29,8 @@ export class GameLoop {
     const dt = dtMs / 1000;
     this.movePlayers(dt);
     this.bulletManager.update(dt);
+    this.enemyManager.update(dt);
+    this.waveManager.check();
   }
 
   isGameOver(): boolean {
