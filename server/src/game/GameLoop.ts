@@ -1,13 +1,17 @@
 import { GameState } from "shared/schemas/GameState";
 import { InputEvent } from "shared/types/events";
+import { BulletManager } from "./BulletManager";
 
 const PLAYER_SPEED = 220;
 const PLAYER_HALF = 16;
 
 export class GameLoop {
   private inputs = new Map<string, InputEvent>();
+  readonly bulletManager: BulletManager;
 
-  constructor(private state: GameState) {}
+  constructor(private state: GameState) {
+    this.bulletManager = new BulletManager(state);
+  }
 
   handleInput(sessionId: string, input: InputEvent) {
     this.inputs.set(sessionId, input);
@@ -16,6 +20,7 @@ export class GameLoop {
   update(dtMs: number) {
     const dt = dtMs / 1000;
     this.movePlayers(dt);
+    this.bulletManager.update(dt);
   }
 
   isGameOver(): boolean {
@@ -37,6 +42,10 @@ export class GameLoop {
 
       player.x = Math.max(PLAYER_HALF, Math.min(this.state.worldWidth  - PLAYER_HALF, player.x));
       player.y = Math.max(PLAYER_HALF, Math.min(this.state.worldHeight - PLAYER_HALF, player.y));
+
+      if (input.fire) {
+        this.bulletManager.spawnPlayerBullet(sessionId, player.x, player.y, player.shotType);
+      }
     });
   }
 }
