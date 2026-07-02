@@ -10,6 +10,27 @@
     </style>
   </head>
   <body>
+    <script>
+      // colyseus.js 0.15 passes { headers, protocols } as the WebSocket protocols
+      // argument (a Node.js-style options object). Safari fires an onerror instead
+      // of throwing, so the library's own try-catch never rescues it.
+      // This patch must run before any module loads (module scripts are deferred).
+      (function () {
+        var _NativeWS = window.WebSocket;
+        function _SafeWS(url, protocols) {
+          var p = (protocols != null && typeof protocols === 'object' && !Array.isArray(protocols))
+            ? protocols.protocols
+            : protocols;
+          return p != null ? new _NativeWS(url, p) : new _NativeWS(url);
+        }
+        _SafeWS.prototype = _NativeWS.prototype;
+        _SafeWS.CONNECTING = _NativeWS.CONNECTING;
+        _SafeWS.OPEN = _NativeWS.OPEN;
+        _SafeWS.CLOSING = _NativeWS.CLOSING;
+        _SafeWS.CLOSED = _NativeWS.CLOSED;
+        window.WebSocket = _SafeWS;
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
