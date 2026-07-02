@@ -15,7 +15,7 @@ export class HUD {
   }
 
   update(state: GameState, mySessionId: string) {
-    this.waveText.setText(`WAVE  ${state.wave}`);
+    this.waveText.setText(`WAVE  ${state.wave ?? 1}`);
     const me = state.players.get(mySessionId);
     if (me) {
       this.scoreText.setText(`SCORE ${me.score}`);

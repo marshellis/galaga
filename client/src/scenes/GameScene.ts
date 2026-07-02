@@ -17,10 +17,15 @@ export class GameScene extends Phaser.Scene {
   private explosionRenderer!: ExplosionRenderer;
   private hud!: HUD;
   private prevEnemyIds = new Set<string>();
+  private gameOverTriggered = false;
+  private debugFrame = 0;
 
   constructor() { super({ key: "GameScene" }); }
 
   async create() {
+    this.gameOverTriggered = false;
+    this.prevEnemyIds = new Set();
+
     this.playerRenderer    = new PlayerRenderer(this);
     this.enemyRenderer     = new EnemyRenderer(this);
     this.bulletRenderer    = new BulletRenderer(this);
@@ -42,29 +47,33 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    colyseusClient.room!.onStateChange((state: GameState) => this.syncState(state));
     this.inputHandler = new InputHandler(this);
     colyseusClient.sendStart();
-    // Sync current state immediately in case onStateChange already fired during connect
-    this.syncState(colyseusClient.room!.state as unknown as GameState);
   }
 
   update() {
     this.inputHandler?.update();
+    const state = colyseusClient.room?.state as unknown as GameState | undefined;
+    if (state) this.syncState(state);
   }
 
   private syncState(state: GameState) {
-    if (state.phase === GamePhase.GameOver) {
-      const me = state.players.get(colyseusClient.room!.sessionId);
-      this.scene.start("GameOverScene", { score: me?.score ?? 0, wave: state.wave });
-      return;
+    if (++this.debugFrame % 60 === 0) {
+      console.log("[galaga] state:", state.phase, "| wave:", state.wave, "| players:", state.players?.size, "| enemies:", state.enemies?.length);
     }
 
-    this.cameras.main.setZoom(state.cameraZoom);
+    if (state.phase === GamePhase.GameOver && !this.gameOverTriggered) {
+      this.gameOverTriggered = true;
+      const me = state.players?.get(colyseusClient.room!.sessionId);
+      this.scene.start("GameOverScene", { score: me?.score ?? 0, wave: state.wave ?? 0 });
+      return;
+    }
+    if (state.phase === GamePhase.GameOver) return;
 
-    // fire explosions for enemies that disappeared since last frame
+    this.cameras.main.setZoom(state.cameraZoom ?? 1);
+
     const currentIds = new Set<string>();
-    state.enemies.forEach((e: any) => currentIds.add(e.id));
+    state.enemies?.forEach((e: any) => currentIds.add(e.id));
     this.prevEnemyIds.forEach(id => {
       if (!currentIds.has(id)) {
         const pos = this.enemyRenderer.getPosition(id);
@@ -75,9 +84,9 @@ export class GameScene extends Phaser.Scene {
     });
     this.prevEnemyIds = currentIds;
 
-    this.playerRenderer.sync(state.players);
-    this.enemyRenderer.sync(state.enemies);
-    this.bulletRenderer.sync(state.bullets);
+    if (state.players)  this.playerRenderer.sync(state.players);
+    if (state.enemies)  this.enemyRenderer.sync(state.enemies);
+    if (state.bullets)  this.bulletRenderer.sync(state.bullets);
     this.hud.update(state, colyseusClient.room!.sessionId);
   }
 }
