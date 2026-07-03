@@ -16,9 +16,9 @@ export class GameScene extends Phaser.Scene {
   private bulletRenderer!: BulletRenderer;
   private explosionRenderer!: ExplosionRenderer;
   private hud!: HUD;
+  private debugText!: Phaser.GameObjects.Text;
   private prevEnemyIds = new Set<string>();
   private gameOverTriggered = false;
-  private debugFrame = 0;
 
   constructor() { super({ key: "GameScene" }); }
 
@@ -31,6 +31,9 @@ export class GameScene extends Phaser.Scene {
     this.bulletRenderer    = new BulletRenderer(this);
     this.explosionRenderer = new ExplosionRenderer(this);
     this.hud               = new HUD(this);
+    this.debugText         = this.add.text(10, 80, "connecting...", {
+      fontSize: "12px", color: "#ffffff", fontFamily: "monospace", backgroundColor: "#000000",
+    }).setScrollFactor(0).setDepth(200);
 
     try {
       await colyseusClient.connect("Anonymous");
@@ -58,9 +61,19 @@ export class GameScene extends Phaser.Scene {
   }
 
   private syncState(state: GameState) {
-    if (++this.debugFrame % 60 === 0) {
-      console.log("[galaga] state:", state.phase, "| wave:", state.wave, "| players:", state.players?.size, "| enemies:", state.enemies?.length);
-    }
+    let playerX = 0, playerY = 0, playerCount = 0;
+    try {
+      state.players?.forEach((p: any) => {
+        playerCount++;
+        playerX = p.x;
+        playerY = p.y;
+      });
+    } catch (e) { console.error("[galaga] players forEach error:", e); }
+
+    const eCount = state.enemies?.length ?? 0;
+    this.debugText?.setText(
+      `phase:${state.phase} P:${playerCount}@(${playerX|0},${playerY|0}) E:${eCount}`
+    );
 
     if (state.phase === GamePhase.GameOver && !this.gameOverTriggered) {
       this.gameOverTriggered = true;
@@ -84,9 +97,15 @@ export class GameScene extends Phaser.Scene {
     });
     this.prevEnemyIds = currentIds;
 
-    if (state.players)  this.playerRenderer.sync(state.players);
-    if (state.enemies)  this.enemyRenderer.sync(state.enemies);
-    if (state.bullets)  this.bulletRenderer.sync(state.bullets);
+    try {
+      if (state.players) this.playerRenderer.sync(state.players);
+    } catch (e) { console.error("[galaga] playerRenderer error:", e); }
+    try {
+      if (state.enemies) this.enemyRenderer.sync(state.enemies);
+    } catch (e) { console.error("[galaga] enemyRenderer error:", e); }
+    try {
+      if (state.bullets) this.bulletRenderer.sync(state.bullets);
+    } catch (e) { console.error("[galaga] bulletRenderer error:", e); }
     this.hud.update(state, colyseusClient.room!.sessionId);
   }
 }
