@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "declaration": true,
     "outDir": "dist",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
   }
 }
