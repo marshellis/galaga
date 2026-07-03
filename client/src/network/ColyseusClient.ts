@@ -8,7 +8,9 @@ class ColyseusClientSingleton {
   public room: Colyseus.Room<GameState> | null = null;
 
   async connect(displayName: string): Promise<Colyseus.Room<GameState>> {
-    this.room = await this.client.joinOrCreate<GameState>("galaga", { displayName });
+    // GameState must be passed as the third argument so colyseus.js knows
+    // how to deserialize the binary schema — without it room.state is empty.
+    this.room = await this.client.joinOrCreate("galaga", { displayName }, GameState);
     return this.room;
   }
 
