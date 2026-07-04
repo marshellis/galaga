@@ -9,4 +9,5 @@ export class BulletState extends Schema {
   @type("string") ownerId: string = "";
   @type("boolean") isEnemy: boolean = false;
   @type("boolean") piercing: boolean = false;
+  @type("boolean") aoe: boolean = false;
 }

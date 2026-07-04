@@ -8,4 +8,6 @@ export interface InputEvent {
 
 export interface JoinOptions {
   displayName?: string;
+  mode?: string;
+  subType?: string;
 }

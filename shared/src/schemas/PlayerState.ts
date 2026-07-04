@@ -11,4 +11,5 @@ export class PlayerState extends Schema {
   @type("string") role: string = "shooter";
   @type("string") shotType: string = "rapid";
   @type("boolean") alive: boolean = true;
+  @type("number") territoryZone: number = -1;
 }

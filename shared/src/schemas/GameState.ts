@@ -16,4 +16,7 @@ export class GameState extends Schema {
   @type("number") cameraZoom: number = 1;
   @type("number") sharedLives: number = 0;
   @type("number") sharedScore: number = 0;
+  @type("string") roomCode: string = "";
+  @type("string") hostId: string = "";
+  @type("string") winner: string = "";
 }
