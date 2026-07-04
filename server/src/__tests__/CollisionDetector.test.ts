@@ -5,7 +5,7 @@ import { GameState } from "shared/schemas/GameState";
 import { PlayerState } from "shared/schemas/PlayerState";
 import { EnemyState } from "shared/schemas/EnemyState";
 import { BulletState } from "shared/schemas/BulletState";
-import { EnemyType } from "shared/types/enums";
+import { EnemyType, CoopSubtype } from "shared/types/enums";
 
 function enemies(state: GameState) {
   const arr: EnemyState[] = [];
@@ -16,6 +16,7 @@ function enemies(state: GameState) {
 function setup() {
   const state = new GameState();
   state.worldWidth = 800; state.worldHeight = 600;
+  state.subType = CoopSubtype.IndependentLives;
   const player = new PlayerState();
   player.sessionId = "p1"; player.x = 400; player.y = 540;
   player.alive = true; player.lives = 3; player.hp = 1; player.score = 0;

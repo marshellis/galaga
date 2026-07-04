@@ -58,6 +58,9 @@ export class GalagaRoom extends Room<GameState> {
     this.onMessage("start", (client: Client) => {
       if (client.sessionId !== this.state.hostId) return;
       if (this.state.phase !== GamePhase.Lobby) return;
+      if (this.state.subType === CoopSubtype.SharedLives) {
+        this.state.sharedLives = this.state.players.size * 3;
+      }
       this.state.phase = GamePhase.Playing;
       this.loop = new GameLoop(this.state);
     });

@@ -1,5 +1,6 @@
 import { GameState } from "shared/schemas/GameState";
 import { InputEvent } from "shared/types/events";
+import { CoopSubtype } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
 import { EnemyManager } from "./EnemyManager";
 import { WaveManager } from "./WaveManager";
@@ -36,6 +37,9 @@ export class GameLoop {
   }
 
   isGameOver(): boolean {
+    if (this.state.subType === CoopSubtype.SharedLives) {
+      return this.state.sharedLives <= 0;
+    }
     let anyAlive = false;
     this.state.players.forEach(p => { if (p.alive) anyAlive = true; });
     return !anyAlive;

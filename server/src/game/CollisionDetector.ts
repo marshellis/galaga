@@ -1,5 +1,6 @@
 import { GameState } from "shared/schemas/GameState";
 import { EnemyType } from "shared/types/enums";
+import { CoopSubtype } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
 import { PLAYER_HALF, ENEMY_HALF } from "./constants";
 
@@ -57,8 +58,16 @@ export class CollisionDetector {
       this.state.players.forEach(player => {
         if (!player.alive || bulletsToRemove.includes(bullet.id)) return;
         if (!overlaps(bullet.x, bullet.y, bullet.width, player.x, player.y, PLAYER_HALF)) return;
-        player.lives -= 1;
-        if (player.lives <= 0) player.alive = false;
+
+        if (this.state.subType === CoopSubtype.SharedLives) {
+          this.state.sharedLives -= 1;
+          if (this.state.sharedLives <= 0) {
+            this.state.players.forEach(p => { p.alive = false; });
+          }
+        } else {
+          player.lives -= 1;
+          if (player.lives <= 0) player.alive = false;
+        }
         bulletsToRemove.push(bullet.id);
       });
     });
