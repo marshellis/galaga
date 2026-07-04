@@ -1,6 +1,6 @@
 import { GameState } from "shared/schemas/GameState";
 import { BulletState } from "shared/schemas/BulletState";
-import { ShooterShotType } from "shared/types/enums";
+import { ShooterShotType, PlayerRole } from "shared/types/enums";
 import { v4 as uuid } from "uuid";
 
 interface BulletConfig { speed: number; fireRateMs: number; w: number; h: number; }
@@ -20,10 +20,16 @@ export class BulletManager {
 
   constructor(private state: GameState) {}
 
-  spawnPlayerBullet(sessionId: string, x: number, y: number, shotType: string) {
+  spawnPlayerBullet(sessionId: string, x: number, y: number, shotType: string, role = "shooter") {
     const cfg = CONFIGS[shotType] ?? CONFIGS[ShooterShotType.Rapid];
     const now = Date.now();
-    if ((now - (this.lastFired.get(sessionId) ?? 0)) < cfg.fireRateMs) return;
+
+    // Bomber uses slow fire rate regardless of shotType; Shield triples fire rate
+    const effectiveFireRate = role === PlayerRole.Bomber ? 800
+      : role === PlayerRole.Shield ? cfg.fireRateMs * 3
+      : cfg.fireRateMs;
+
+    if ((now - (this.lastFired.get(sessionId) ?? 0)) < effectiveFireRate) return;
     this.lastFired.set(sessionId, now);
 
     const angles = shotType === ShooterShotType.Spread ? [-15, 0, 15] : [0];
@@ -33,14 +39,15 @@ export class BulletManager {
       b.id = uuid();
       b.x = x;
       b.y = y - 16;
-      b.width = cfg.w;
-      b.height = cfg.h;
+      b.width = role === PlayerRole.Bomber ? 14 : cfg.w;
+      b.height = role === PlayerRole.Bomber ? 14 : cfg.h;
       b.ownerId = sessionId;
       b.isEnemy = false;
       b.piercing = shotType === ShooterShotType.Piercing;
+      b.aoe = role === PlayerRole.Bomber;
       this.velocities.set(b.id, {
         vx: Math.sin(rad) * cfg.speed,
-        vy: -Math.cos(rad) * cfg.speed,
+        vy: -Math.cos(rad) * (role === PlayerRole.Bomber ? 200 : cfg.speed),
       });
       this.state.bullets.push(b);
     }

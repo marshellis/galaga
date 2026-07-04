@@ -1,6 +1,6 @@
 import { GameState } from "shared/schemas/GameState";
 import { InputEvent } from "shared/types/events";
-import { CoopSubtype } from "shared/types/enums";
+import { PlayerRole, CoopSubtype } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
 import { EnemyManager } from "./EnemyManager";
 import { WaveManager } from "./WaveManager";
@@ -13,6 +13,8 @@ export class GameLoop {
   private enemyManager: EnemyManager;
   private waveManager: WaveManager;
   private collisionDetector: CollisionDetector;
+  private lastDiedId: string | null = null;
+  private healerCooldowns = new Map<string, number>();
 
   constructor(private state: GameState) {
     this.bulletManager = new BulletManager(state);
@@ -33,6 +35,13 @@ export class GameLoop {
     this.bulletManager.update(dt);
     this.enemyManager.update(dt);
     this.collisionDetector.check();
+    if (this.state.subType === CoopSubtype.RoleSpecialization) {
+      this.state.players.forEach((p, id) => {
+        if (!p.alive && id !== this.lastDiedId) {
+          this.lastDiedId = id;
+        }
+      });
+    }
     this.waveManager.check();
   }
 
@@ -43,6 +52,18 @@ export class GameLoop {
     let anyAlive = false;
     this.state.players.forEach(p => { if (p.alive) anyAlive = true; });
     return !anyAlive;
+  }
+
+  private tryHeal(healerId: string) {
+    const now = Date.now();
+    if ((now - (this.healerCooldowns.get(healerId) ?? 0)) < 5000) return;
+    if (!this.lastDiedId) return;
+    const target = this.state.players.get(this.lastDiedId);
+    if (!target || target.alive) { this.lastDiedId = null; return; }
+    target.hp = 1;
+    target.alive = true;
+    this.lastDiedId = null;
+    this.healerCooldowns.set(healerId, now);
   }
 
   private movePlayers(dt: number) {
@@ -60,7 +81,11 @@ export class GameLoop {
       player.y = Math.max(PLAYER_HALF, Math.min(this.state.worldHeight - PLAYER_HALF, player.y));
 
       if (input.fire) {
-        this.bulletManager.spawnPlayerBullet(sessionId, player.x, player.y, player.shotType);
+        if (player.role === PlayerRole.Healer && this.state.subType === CoopSubtype.RoleSpecialization) {
+          this.tryHeal(sessionId);
+        } else {
+          this.bulletManager.spawnPlayerBullet(sessionId, player.x, player.y, player.shotType, player.role);
+        }
       }
     });
   }

@@ -3,6 +3,8 @@ import { EnemyType, CoopSubtype } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
 import { PLAYER_HALF, ENEMY_HALF } from "./constants";
 
+const AOE_RADIUS = 60;
+
 function overlaps(ax: number, ay: number, aw: number, bx: number, by: number, bw: number): boolean {
   return Math.abs(ax - bx) < (aw + bw) / 2 && Math.abs(ay - by) < (aw + bw) / 2;
 }
@@ -28,15 +30,25 @@ export class CollisionDetector {
         if (enemiesToRemove.includes(enemy.id)) return; // already dead
         if (!overlaps(bullet.x, bullet.y, bullet.width, enemy.x, enemy.y, ENEMY_HALF)) return;
 
+        if (bullet.aoe) {
+          // Detonate: remove the bullet and kill all enemies within AOE_RADIUS
+          bulletsToRemove.push(bullet.id);
+          this.state.enemies.forEach(e => {
+            if (enemiesToRemove.includes(e.id)) return;
+            const dist = Math.hypot(bullet.x - e.x, bullet.y - e.y);
+            if (dist <= AOE_RADIUS) {
+              const points = e.type === EnemyType.Boss ? 200 : 100;
+              this.awardPoints(bullet.ownerId, points);
+              enemiesToRemove.push(e.id);
+            }
+          });
+          return;
+        }
+
         enemy.hp -= damage;
         if (enemy.hp <= 0) {
           const points = enemy.type === EnemyType.Boss ? 200 : 100;
-          if (this.state.subType === CoopSubtype.IndependentLives) {
-            this.state.sharedScore += points;
-          } else {
-            const player = this.state.players.get(bullet.ownerId);
-            if (player) player.score += points;
-          }
+          this.awardPoints(bullet.ownerId, points);
           enemiesToRemove.push(enemy.id);
         }
         if (!bullet.piercing) bulletsToRemove.push(bullet.id);
@@ -49,6 +61,15 @@ export class CollisionDetector {
     }
     for (const id of bulletsToRemove) {
       this.bulletManager.removeBullet(id);
+    }
+  }
+
+  private awardPoints(ownerId: string, points: number) {
+    if (this.state.subType === CoopSubtype.IndependentLives) {
+      this.state.sharedScore += points;
+    } else {
+      const player = this.state.players.get(ownerId);
+      if (player) player.score += points;
     }
   }
 
@@ -67,6 +88,9 @@ export class CollisionDetector {
           if (this.state.sharedLives <= 0) {
             this.state.players.forEach(p => { p.alive = false; });
           }
+        } else if (this.state.subType === CoopSubtype.RoleSpecialization) {
+          player.hp -= 1;
+          if (player.hp <= 0) player.alive = false;
         } else {
           player.lives -= 1;
           if (player.lives <= 0) player.alive = false;

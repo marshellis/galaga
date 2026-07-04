@@ -58,9 +58,23 @@ export class GalagaRoom extends Room<GameState> {
     this.onMessage("start", (client: Client) => {
       if (client.sessionId !== this.state.hostId) return;
       if (this.state.phase !== GamePhase.Lobby) return;
+
+      if (this.state.subType === CoopSubtype.RoleSpecialization) {
+        const roles = new Set<string>();
+        this.state.players.forEach(p => roles.add(p.role));
+        const required = [PlayerRole.Shield, PlayerRole.Bomber, PlayerRole.Healer];
+        if (!required.every(r => roles.has(r))) return; // silently reject
+      }
+
       if (this.state.subType === CoopSubtype.SharedLives) {
         this.state.sharedLives = this.state.players.size * 3;
       }
+
+      // Initialize RoleSpec players with hp=2
+      if (this.state.subType === CoopSubtype.RoleSpecialization) {
+        this.state.players.forEach(p => { p.hp = 2; });
+      }
+
       this.state.phase = GamePhase.Playing;
       this.loop = new GameLoop(this.state);
     });
