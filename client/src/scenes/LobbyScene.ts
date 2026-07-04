@@ -13,7 +13,6 @@ export class LobbyScene extends Phaser.Scene {
   private listText!: Phaser.GameObjects.Text;
   private infoText!: Phaser.GameObjects.Text;
   private promptText!: Phaser.GameObjects.Text;
-  private rolePicker: Phaser.GameObjects.Text[] = [];
   private roleIndex = 0;
 
   private readonly ROLES = [PlayerRole.Shooter, PlayerRole.Shield, PlayerRole.Bomber, PlayerRole.Healer];
@@ -34,11 +33,7 @@ export class LobbyScene extends Phaser.Scene {
     this.listText = this.add.text(40, 130, "", { fontSize: "16px", color: "#ffffff", fontFamily: "monospace" });
     this.promptText = this.add.text(cx, cy + 160, "", { fontSize: "16px", color: "#aaaaaa", fontFamily: "monospace" }).setOrigin(0.5);
 
-    const room = colyseusClient.room!;
-    const state = room.state as unknown as GameState;
-
     // Watch for game start
-    room.onStateChange.once(() => {});  // ensure listener is set
     this.time.addEvent({
       delay: 200,
       loop: true,

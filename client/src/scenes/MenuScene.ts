@@ -113,6 +113,7 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(cx, cy + 80, "[ ESC ] BACK", { fontSize: "16px", color: "#666666", fontFamily: "monospace" }).setOrigin(0.5);
 
     const allowed = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let joining = false;
     const refreshCode = () => {
       const display = this.codeChars.concat(Array(6 - this.codeChars.length).fill("_")).join("");
       const formatted = display.slice(0, 3) + "-" + display.slice(3);
@@ -120,6 +121,7 @@ export class MenuScene extends Phaser.Scene {
     };
 
     this.input.keyboard!.on("keydown", async (e: KeyboardEvent) => {
+      if (joining) return;
       if (e.key === "Escape") { this.drawMain(); return; }
       if (e.key === "Backspace") { this.codeChars.pop(); refreshCode(); return; }
       const ch = e.key.toUpperCase();
@@ -127,7 +129,8 @@ export class MenuScene extends Phaser.Scene {
         this.codeChars.push(ch);
         refreshCode();
       }
-      if (this.codeChars.length === 6) {
+      if (!joining && this.codeChars.length === 6) {
+        joining = true;
         this.statusText.setText("Joining...").setColor("#ffffff");
         const code = this.codeChars.join("");
         try {
@@ -137,6 +140,7 @@ export class MenuScene extends Phaser.Scene {
           this.statusText.setText("Room not found.").setColor("#ff4444");
           this.codeChars = [];
           refreshCode();
+          joining = false;
         }
       }
     });
