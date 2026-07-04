@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { GameState } from "shared/schemas/GameState";
 import { generateRoomCode } from "../rooms/GalagaRoom";
-import { CoopSubtype, CompetitiveSubtype, GameMode } from "shared/types/enums";
 
 describe("generateRoomCode", () => {
   it("returns 6 uppercase alphanumeric characters", () => {
