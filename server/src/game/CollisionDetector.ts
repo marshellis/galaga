@@ -26,9 +26,9 @@ export class CollisionDetector {
       if (bulletsToRemove.includes(bullet.id)) return; // already consumed
       const damage = this.bulletManager.damageOf(bullet.id);
 
-      this.state.enemies.forEach(enemy => {
-        if (enemiesToRemove.includes(enemy.id)) return; // already dead
-        if (!overlaps(bullet.x, bullet.y, bullet.width, enemy.x, enemy.y, ENEMY_HALF)) return;
+      for (const enemy of this.state.enemies) {
+        if (enemiesToRemove.includes(enemy.id)) continue; // already dead
+        if (!overlaps(bullet.x, bullet.y, bullet.width, enemy.x, enemy.y, ENEMY_HALF)) continue;
 
         if (bullet.aoe) {
           // Detonate: remove the bullet and kill all enemies within AOE_RADIUS
@@ -42,7 +42,7 @@ export class CollisionDetector {
               enemiesToRemove.push(e.id);
             }
           });
-          return;
+          break; // bullet consumed — stop checking more enemies
         }
 
         enemy.hp -= damage;
@@ -52,7 +52,7 @@ export class CollisionDetector {
           enemiesToRemove.push(enemy.id);
         }
         if (!bullet.piercing) bulletsToRemove.push(bullet.id);
-      });
+      }
     });
 
     for (const id of enemiesToRemove) {
