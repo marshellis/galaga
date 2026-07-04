@@ -1,6 +1,5 @@
 import { GameState } from "shared/schemas/GameState";
-import { EnemyType } from "shared/types/enums";
-import { CoopSubtype } from "shared/types/enums";
+import { EnemyType, CoopSubtype } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
 import { PLAYER_HALF, ENEMY_HALF } from "./constants";
 
