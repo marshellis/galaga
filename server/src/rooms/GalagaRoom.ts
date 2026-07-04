@@ -82,7 +82,12 @@ export class GalagaRoom extends Room<GameState> {
     this.setSimulationInterval((dt: number) => {
       if (this.state.phase !== GamePhase.Playing) return;
       this.loop!.update(dt);
-      if (this.loop!.isGameOver()) this.state.phase = GamePhase.GameOver;
+      if (this.loop!.isGameOver()) {
+        if (this.state.gameMode === GameMode.Competitive) {
+          this.loop!.resolveWinner();
+        }
+        this.state.phase = GamePhase.GameOver;
+      }
     }, TICK_MS);
   }
 

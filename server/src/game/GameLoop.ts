@@ -1,6 +1,6 @@
 import { GameState } from "shared/schemas/GameState";
 import { InputEvent } from "shared/types/events";
-import { PlayerRole, CoopSubtype } from "shared/types/enums";
+import { PlayerRole, CoopSubtype, CompetitiveSubtype } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
 import { EnemyManager } from "./EnemyManager";
 import { WaveManager } from "./WaveManager";
@@ -52,6 +52,22 @@ export class GameLoop {
     let anyAlive = false;
     this.state.players.forEach(p => { if (p.alive) anyAlive = true; });
     return !anyAlive;
+  }
+
+  resolveWinner() {
+    const mode = this.state.subType;
+    if (mode === CompetitiveSubtype.ScoreRace || mode === CompetitiveSubtype.Territory) {
+      let topId = "";
+      let topScore = -1;
+      this.state.players.forEach((p, id) => {
+        if (p.score > topScore) { topScore = p.score; topId = id; }
+      });
+      this.state.winner = topId;
+    } else if (mode === CompetitiveSubtype.LastShipStanding) {
+      this.state.players.forEach((p, id) => {
+        if (p.alive) this.state.winner = id;
+      });
+    }
   }
 
   private tryHeal(healerId: string) {
