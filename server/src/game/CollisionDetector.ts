@@ -1,5 +1,5 @@
 import { GameState } from "shared/schemas/GameState";
-import { EnemyType, CoopSubtype } from "shared/types/enums";
+import { EnemyType, CoopSubtype, CompetitiveSubtype } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
 import { PLAYER_HALF, ENEMY_HALF } from "./constants";
 
@@ -15,6 +15,33 @@ export class CollisionDetector {
   check() {
     this.playerBulletsVsEnemies();
     this.enemyBulletsVsPlayers();
+    if (this.state.subType === CompetitiveSubtype.LastShipStanding) {
+      this.friendlyFire();
+    }
+  }
+
+  private friendlyFire() {
+    const bulletsToRemove: string[] = [];
+
+    this.state.bullets.forEach(bullet => {
+      if (bullet.isEnemy) return;
+      if (bulletsToRemove.includes(bullet.id)) return;
+
+      this.state.players.forEach((player, id) => {
+        if (!player.alive) return;
+        if (id === bullet.ownerId) return; // no self-damage
+        if (bulletsToRemove.includes(bullet.id)) return;
+        if (!overlaps(bullet.x, bullet.y, bullet.width, player.x, player.y, PLAYER_HALF)) return;
+
+        player.lives -= 1;
+        if (player.lives <= 0) player.alive = false;
+        bulletsToRemove.push(bullet.id);
+      });
+    });
+
+    for (const id of bulletsToRemove) {
+      this.bulletManager.removeBullet(id);
+    }
   }
 
   private playerBulletsVsEnemies() {
