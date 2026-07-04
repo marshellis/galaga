@@ -31,6 +31,7 @@ export class GalagaRoom extends Room<GameState> {
     this.state.roomCode = generateRoomCode();
     this.state.gameMode = options.mode ?? GameMode.Cooperative;
     this.state.subType = options.subType ?? CoopSubtype.SharedLives;
+    this.setMetadata({ roomCode: this.state.roomCode });
 
     this.onMessage("set-role", (client: Client, data: { role: string }) => {
       const player = this.state.players.get(client.sessionId);
