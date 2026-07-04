@@ -7,6 +7,7 @@ import {
   GamePhase,
   GameMode,
   CoopSubtype,
+  CompetitiveSubtype,
   PlayerRole,
 } from "shared/types/enums";
 
@@ -73,6 +74,11 @@ export class GalagaRoom extends Room<GameState> {
       // Initialize RoleSpec players with hp=2
       if (this.state.subType === CoopSubtype.RoleSpecialization) {
         this.state.players.forEach(p => { p.hp = 2; });
+      }
+
+      if (this.state.subType === CompetitiveSubtype.Territory) {
+        let zoneIndex = 0;
+        this.state.players.forEach(p => { p.territoryZone = zoneIndex++; });
       }
 
       this.state.phase = GamePhase.Playing;

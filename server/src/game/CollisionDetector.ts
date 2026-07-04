@@ -65,7 +65,7 @@ export class CollisionDetector {
             const dist = Math.hypot(bullet.x - e.x, bullet.y - e.y);
             if (dist <= AOE_RADIUS) {
               const points = e.type === EnemyType.Boss ? 200 : 100;
-              this.awardPoints(bullet.ownerId, points);
+              this.awardPoints(bullet.ownerId, points, e.x);
               enemiesToRemove.push(e.id);
             }
           });
@@ -75,7 +75,7 @@ export class CollisionDetector {
         enemy.hp -= damage;
         if (enemy.hp <= 0) {
           const points = enemy.type === EnemyType.Boss ? 200 : 100;
-          this.awardPoints(bullet.ownerId, points);
+          this.awardPoints(bullet.ownerId, points, enemy.x);
           enemiesToRemove.push(enemy.id);
         }
         if (!bullet.piercing) bulletsToRemove.push(bullet.id);
@@ -91,13 +91,28 @@ export class CollisionDetector {
     }
   }
 
-  private awardPoints(ownerId: string, points: number) {
+  private awardPoints(ownerId: string, points: number, enemyX?: number) {
     if (this.state.subType === CoopSubtype.IndependentLives) {
       this.state.sharedScore += points;
-    } else {
-      const player = this.state.players.get(ownerId);
-      if (player) player.score += points;
+      return;
     }
+    if (this.state.subType === CompetitiveSubtype.Territory && enemyX !== undefined) {
+      const playerCount = this.state.players.size;
+      if (playerCount > 0) {
+        const zoneWidth = this.state.worldWidth / playerCount;
+        const zoneIndex = Math.floor(enemyX / zoneWidth);
+        let scored = false;
+        this.state.players.forEach(p => {
+          if (!scored && p.territoryZone === zoneIndex) {
+            p.score += points;
+            scored = true;
+          }
+        });
+        return;
+      }
+    }
+    const player = this.state.players.get(ownerId);
+    if (player) player.score += points;
   }
 
   private enemyBulletsVsPlayers() {
