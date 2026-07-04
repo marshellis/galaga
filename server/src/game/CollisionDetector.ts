@@ -31,8 +31,12 @@ export class CollisionDetector {
         enemy.hp -= damage;
         if (enemy.hp <= 0) {
           const points = enemy.type === EnemyType.Boss ? 200 : 100;
-          const player = this.state.players.get(bullet.ownerId);
-          if (player) player.score += points;
+          if (this.state.subType === CoopSubtype.IndependentLives) {
+            this.state.sharedScore += points;
+          } else {
+            const player = this.state.players.get(bullet.ownerId);
+            if (player) player.score += points;
+          }
           enemiesToRemove.push(enemy.id);
         }
         if (!bullet.piercing) bulletsToRemove.push(bullet.id);
