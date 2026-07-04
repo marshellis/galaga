@@ -5,7 +5,7 @@ import { EnemyState } from "shared/schemas/EnemyState";
 import { BulletState } from "shared/schemas/BulletState";
 import { BulletManager } from "../game/BulletManager";
 import { CollisionDetector } from "../game/CollisionDetector";
-import { CoopSubtype, EnemyType, GameMode } from "shared/types/enums";
+import { CompetitiveSubtype, CoopSubtype, EnemyType, GameMode } from "shared/types/enums";
 
 function setup(subType: string) {
   const state = new GameState();
@@ -56,7 +56,7 @@ describe("Independent Lives + Shared Score mode", () => {
   it("competitive mode still awards player.score", () => {
     const state = new GameState();
     state.worldWidth = 800; state.worldHeight = 600;
-    state.gameMode = "competitive"; state.subType = "score_race";
+    state.gameMode = GameMode.Competitive; state.subType = CompetitiveSubtype.ScoreRace;
     const p = new PlayerState();
     p.sessionId = "p1"; p.x = 400; p.y = 540; p.alive = true; p.score = 0;
     state.players.set("p1", p);
