@@ -4,7 +4,7 @@ import { colyseusClient } from "../network/ColyseusClient";
 export class GameOverScene extends Phaser.Scene {
   constructor() { super({ key: "GameOverScene" }); }
 
-  create(data: { score: number; wave: number }) {
+  create(data: { score: number; wave: number; winner?: string }) {
     colyseusClient.leave();
     const cx = this.scale.width / 2;
     const cy = this.scale.height / 2;
@@ -12,6 +12,12 @@ export class GameOverScene extends Phaser.Scene {
     this.add.text(cx, cy - 100, "GAME OVER", {
       fontSize: "56px", color: "#ff0000", fontFamily: "monospace",
     }).setOrigin(0.5);
+
+    if (data.winner) {
+      this.add.text(cx, cy - 44, `WINNER: ${data.winner}`, {
+        fontSize: "28px", color: "#ffff00", fontFamily: "monospace",
+      }).setOrigin(0.5);
+    }
 
     this.add.text(cx, cy, `SCORE  ${data.score}`, {
       fontSize: "28px", color: "#ffffff", fontFamily: "monospace",

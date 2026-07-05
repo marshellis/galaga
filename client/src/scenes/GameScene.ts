@@ -22,9 +22,14 @@ export class GameScene extends Phaser.Scene {
 
   constructor() { super({ key: "GameScene" }); }
 
-  async create() {
+  create() {
     this.gameOverTriggered = false;
     this.prevEnemyIds = new Set();
+
+    if (!colyseusClient.room) {
+      this.scene.start("MenuScene");
+      return;
+    }
 
     this.playerRenderer    = new PlayerRenderer(this);
     this.enemyRenderer     = new EnemyRenderer(this);
@@ -35,23 +40,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: "12px", color: "#ffffff", fontFamily: "monospace", backgroundColor: "#000000",
     }).setScrollFactor(0).setDepth(200);
 
-    try {
-      await colyseusClient.connect("Anonymous");
-    } catch {
-      const cx = this.scale.width / 2;
-      const cy = this.scale.height / 2;
-      this.add.text(cx, cy - 20, "Could not connect to server.", {
-        fontSize: "20px", color: "#ff4444", fontFamily: "monospace",
-      }).setOrigin(0.5);
-      this.add.text(cx, cy + 20, "[ PRESS ENTER TO RETURN ]", {
-        fontSize: "16px", color: "#aaaaaa", fontFamily: "monospace",
-      }).setOrigin(0.5);
-      this.input.keyboard!.once("keydown-ENTER", () => this.scene.start("MenuScene"));
-      return;
-    }
-
     this.inputHandler = new InputHandler(this);
-    colyseusClient.sendStart();
   }
 
   update() {
@@ -78,7 +67,7 @@ export class GameScene extends Phaser.Scene {
     if (state.phase === GamePhase.GameOver && !this.gameOverTriggered) {
       this.gameOverTriggered = true;
       const me = state.players?.get(colyseusClient.room!.sessionId);
-      this.scene.start("GameOverScene", { score: me?.score ?? 0, wave: state.wave ?? 0 });
+      this.scene.start("GameOverScene", { score: me?.score ?? 0, wave: state.wave ?? 0, winner: state.winner ?? "" });
       return;
     }
     if (state.phase === GamePhase.GameOver) return;
