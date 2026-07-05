@@ -29,6 +29,7 @@ export class GalagaRoom extends Room<GameState> {
 
   onCreate(options: JoinOptions = {}) {
     this.setState(new GameState());
+    this.maxClients = 8;
     this.state.roomCode = generateRoomCode();
     this.state.gameMode = options.mode ?? GameMode.Cooperative;
     this.state.subType = options.subType ?? CoopSubtype.SharedLives;
@@ -82,6 +83,7 @@ export class GalagaRoom extends Room<GameState> {
       }
 
       this.state.phase = GamePhase.Playing;
+      this.lock();
       this.loop = new GameLoop(this.state);
     });
 
