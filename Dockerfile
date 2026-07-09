@@ -3,6 +3,7 @@ WORKDIR /app
 
 # Install deps for both workspaces (hoists @colyseus/schema etc. to /app/node_modules)
 COPY package*.json ./
+COPY tsconfig.base.json ./
 COPY shared/package.json ./shared/
 COPY server/package.json ./server/
 RUN npm ci --workspace=shared --workspace=server
