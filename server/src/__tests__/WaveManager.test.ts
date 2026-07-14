@@ -43,7 +43,7 @@ describe("WaveManager", () => {
     expect(state.enemies.length).toBeGreaterThan(0);
   });
 
-  it("wave 3 spawns more enemies than wave 1", () => {
+  it("wave 3 spawns the same enemy count as wave 1 (speed scales, not count)", () => {
     const state1 = makeState();
     const em1 = new EnemyManager(state1);
     const wm1 = new WaveManager(state1, em1, 1);
@@ -53,6 +53,6 @@ describe("WaveManager", () => {
     const state3 = makeState();
     const em3 = new EnemyManager(state3);
     em3.spawnFormation(3, 1);
-    expect(state3.enemies.length).toBeGreaterThan(wave1Count);
+    expect(state3.enemies.length).toBe(wave1Count);
   });
 });
