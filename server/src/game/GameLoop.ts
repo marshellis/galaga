@@ -21,6 +21,7 @@ export class GameLoop {
     this.enemyManager = new EnemyManager(state);
     this.enemyManager.setBulletManager(this.bulletManager);
     this.collisionDetector = new CollisionDetector(state, this.bulletManager);
+    this.collisionDetector.setEnemyManager(this.enemyManager);
     this.waveManager = new WaveManager(state, this.enemyManager, state.players.size);
     this.waveManager.start();
   }

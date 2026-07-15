@@ -45,6 +45,14 @@ export class EnemyManager {
 
   setBulletManager(bm: BulletManager) { this.bulletManager = bm; }
 
+  removeEnemy(id: string) {
+    const idx = this.state.enemies.findIndex(e => e.id === id);
+    if (idx !== -1) this.state.enemies.splice(idx, 1);
+    this.entryPaths.delete(id);
+    this.divePaths.delete(id);
+    this.enemyMeta.delete(id);
+  }
+
   spawnFormation(wave: number, playerCount: number) {
     this.sweepSpeed  = BASE_SWEEP_SPEED + (wave - 1) * 5;
     this.diveSpeed   = BASE_DIVE_SPEED  + (wave - 1) * 10;
@@ -175,6 +183,7 @@ export class EnemyManager {
         this.entryPaths.delete(e.id);
         return;
       }
+      return;
     }
 
     const move = ENTRY_SPEED * dt;

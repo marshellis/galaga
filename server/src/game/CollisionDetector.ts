@@ -2,6 +2,7 @@ import { GameState } from "shared/schemas/GameState";
 import { PlayerState } from "shared/schemas/PlayerState";
 import { EnemyType, CoopSubtype, CompetitiveSubtype } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
+import type { EnemyManager } from "./EnemyManager";
 import { PLAYER_HALF, ENEMY_HALF } from "./constants";
 
 const AOE_RADIUS = 60;
@@ -11,11 +12,11 @@ function overlaps(ax: number, ay: number, aw: number, bx: number, by: number, bw
 }
 
 export class CollisionDetector {
-  private enemyManager: import("./EnemyManager").EnemyManager | null = null;
+  private enemyManager: EnemyManager | null = null;
 
   constructor(private state: GameState, private bulletManager: BulletManager) {}
 
-  setEnemyManager(em: import("./EnemyManager").EnemyManager) { this.enemyManager = em; }
+  setEnemyManager(em: EnemyManager) { this.enemyManager = em; }
 
   check() {
     this.enemiesVsPlayers();
