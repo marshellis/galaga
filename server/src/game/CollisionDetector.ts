@@ -1,4 +1,5 @@
 import { GameState } from "shared/schemas/GameState";
+import { PlayerState } from "shared/schemas/PlayerState";
 import { EnemyType, CoopSubtype, CompetitiveSubtype } from "shared/types/enums";
 import { BulletManager } from "./BulletManager";
 import { PLAYER_HALF, ENEMY_HALF } from "./constants";
@@ -10,13 +11,61 @@ function overlaps(ax: number, ay: number, aw: number, bx: number, by: number, bw
 }
 
 export class CollisionDetector {
+  private enemyManager: import("./EnemyManager").EnemyManager | null = null;
+
   constructor(private state: GameState, private bulletManager: BulletManager) {}
 
+  setEnemyManager(em: import("./EnemyManager").EnemyManager) { this.enemyManager = em; }
+
   check() {
+    this.enemiesVsPlayers();
     this.playerBulletsVsEnemies();
     this.enemyBulletsVsPlayers();
     if (this.state.subType === CompetitiveSubtype.LastShipStanding) {
       this.friendlyFire();
+    }
+  }
+
+  private applyPlayerDamage(player: PlayerState) {
+    if (this.state.subType === CoopSubtype.SharedLives) {
+      this.state.sharedLives -= 1;
+      if (this.state.sharedLives <= 0) {
+        this.state.players.forEach(p => { p.alive = false; });
+      }
+    } else if (this.state.subType === CoopSubtype.RoleSpecialization) {
+      player.hp -= 1;
+      if (player.hp <= 0) player.alive = false;
+    } else {
+      player.lives -= 1;
+      if (player.lives <= 0) player.alive = false;
+    }
+  }
+
+  private enemiesVsPlayers() {
+    const enemiesToRemove: string[] = [];
+
+    this.state.enemies.forEach(enemy => {
+      if (enemiesToRemove.includes(enemy.id)) return;
+
+      this.state.players.forEach((player, id) => {
+        if (!player.alive) return;
+        if (enemiesToRemove.includes(enemy.id)) return;
+        if (!overlaps(enemy.x, enemy.y, ENEMY_HALF, player.x, player.y, PLAYER_HALF)) return;
+
+        const points = enemy.type === EnemyType.Boss ? 200 : 100;
+        this.awardPoints(id, points, enemy.x);
+        enemiesToRemove.push(enemy.id);
+        this.applyPlayerDamage(player);
+      });
+    });
+
+    for (const id of enemiesToRemove) {
+      if (this.enemyManager) {
+        this.enemyManager.removeEnemy(id);
+      } else {
+        const idx = this.state.enemies.findIndex(e => e.id === id);
+        if (idx !== -1) this.state.enemies.splice(idx, 1);
+      }
     }
   }
 
@@ -83,8 +132,12 @@ export class CollisionDetector {
     });
 
     for (const id of enemiesToRemove) {
-      const idx = this.state.enemies.findIndex(e => e.id === id);
-      if (idx !== -1) this.state.enemies.splice(idx, 1);
+      if (this.enemyManager) {
+        this.enemyManager.removeEnemy(id);
+      } else {
+        const idx = this.state.enemies.findIndex(e => e.id === id);
+        if (idx !== -1) this.state.enemies.splice(idx, 1);
+      }
     }
     for (const id of bulletsToRemove) {
       this.bulletManager.removeBullet(id);
@@ -125,18 +178,7 @@ export class CollisionDetector {
         if (!player.alive || bulletsToRemove.includes(bullet.id)) return;
         if (!overlaps(bullet.x, bullet.y, bullet.width, player.x, player.y, PLAYER_HALF)) return;
 
-        if (this.state.subType === CoopSubtype.SharedLives) {
-          this.state.sharedLives -= 1;
-          if (this.state.sharedLives <= 0) {
-            this.state.players.forEach(p => { p.alive = false; });
-          }
-        } else if (this.state.subType === CoopSubtype.RoleSpecialization) {
-          player.hp -= 1;
-          if (player.hp <= 0) player.alive = false;
-        } else {
-          player.lives -= 1;
-          if (player.lives <= 0) player.alive = false;
-        }
+        this.applyPlayerDamage(player);
         bulletsToRemove.push(bullet.id);
       });
     });

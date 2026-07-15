@@ -121,4 +121,21 @@ describe("CollisionDetector", () => {
     expect(state.enemies.length).toBe(1);
     expect(player.score).toBe(0);
   });
+
+  it("enemy overlapping player removes enemy, awards points, and reduces player lives", () => {
+    const { state, player, cd } = setup();
+    // Place enemy directly on player (overlapping)
+    enemy(state, 400, 540);
+    cd.check();
+    expect(state.enemies.length).toBe(0);   // enemy removed
+    expect(player.lives).toBe(2);            // player took damage
+    expect(player.score).toBe(100);          // points awarded
+  });
+
+  it("boss enemy overlapping player awards 200 points", () => {
+    const { state, player, cd } = setup();
+    enemy(state, 400, 540, 1, EnemyType.Boss);
+    cd.check();
+    expect(player.score).toBe(200);
+  });
 });
