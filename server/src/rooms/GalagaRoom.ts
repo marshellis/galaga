@@ -87,6 +87,8 @@ export class GalagaRoom extends Room<GameState> {
       this.loop = new GameLoop(this.state);
     });
 
+    this.setPatchRate(1000 / 60); // send state at 60 Hz to match simulation tick
+
     this.setSimulationInterval((dt: number) => {
       if (this.state.phase !== GamePhase.Playing) return;
       this.loop!.update(dt);
