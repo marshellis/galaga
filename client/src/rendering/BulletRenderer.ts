@@ -13,9 +13,7 @@ export class BulletRenderer {
     bullets.forEach(bullet => {
       seen.add(bullet.id);
       if (!this.sprites.has(bullet.id)) {
-        const key = bullet.isEnemy ? "bullet_enemy"
-          : bullet.width >= 10     ? "bullet_heavy"
-          : "bullet_player";
+        const key = bullet.isEnemy ? "bullet_enemy" : "bullet_player";
         const s = this.scene.add.image(bullet.x, bullet.y, key).setDepth(8);
         this.sprites.set(bullet.id, s);
       }

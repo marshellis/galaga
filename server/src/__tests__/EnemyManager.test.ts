@@ -86,39 +86,25 @@ describe("EnemyManager", () => {
     const mgr = new EnemyManager(state);
     mgr.spawnFormation(1, 1);
 
-    // Fast-forward entry
+    // Fast-forward entry (10s — all enemies settled in formation)
     for (let i = 0; i < 100; i++) mgr.update(0.1);
 
-    // Find a formation enemy and record its start position
-    const firstEnemy = enemies(state)[0];
-    const startX = firstEnemy.x;
-    const startY = firstEnemy.y;
+    // Force a specific enemy into a dive deterministically
+    const enemy = enemies(state)[0];
+    const startX = enemy.x;
+    ;(mgr as any).startDive(enemy);
+    expect(enemy.diving).toBe(true);
 
-    // Force a dive by running many small ticks until one enemy starts diving
-    let diveStartX = 0, diveStartY = 0;
-    let diveEnemy: typeof firstEnemy | null = null;
-    for (let i = 0; i < 200 && !diveEnemy; i++) {
-      mgr.update(0.016);
-      enemies(state).forEach(e => {
-        if (e.diving && !diveEnemy) {
-          diveEnemy = e;
-          diveStartX = e.x;
-          diveStartY = e.y;
-        }
-      });
-    }
+    const path = (mgr as any).divePaths.get(enemy.id);
 
-    if (!diveEnemy) return; // no enemy dove — skip (probabilistic)
+    // Advance exactly to t=0.5 in one step
+    mgr.update(path.duration / 2);
 
-    // Advance the dive to t≈0.5
-    for (let i = 0; i < 50; i++) mgr.update(0.033);
+    const midX = enemy.x;
 
-    const midX = (diveEnemy as any).x;
-    const midY = (diveEnemy as any).y;
-
-    // On a straight line, midY would be roughly (startY + 540) / 2 ≈ midpoint
-    // The Bézier control point adds lateral offset, so midX deviates from straight line
-    const straightMidX = (diveStartX + 400) / 2;
-    expect(Math.abs(midX - straightMidX)).toBeGreaterThan(10); // curved, not straight
+    // Bézier lateral control offset is ±(worldWidth * 0.25) = ±200 px,
+    // so the midpoint deviates well beyond 10 px from the straight-line midpoint
+    const straightMidX = (startX + 400) / 2;
+    expect(Math.abs(midX - straightMidX)).toBeGreaterThan(10);
   });
 });
