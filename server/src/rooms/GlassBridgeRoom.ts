@@ -67,6 +67,36 @@ export class GlassBridgeRoom extends Room {
       }
     });
 
+    // shop: skip item — prove a row without landing on it and stand there safely
+    this.onMessage("skip", (client: Client, d: { row?: number }) => {
+      const p = this.players.get(client.sessionId);
+      if (!p) return;
+      const row = Math.trunc(Number(d?.row));
+      const res = this.bridge.prove(row);
+      if (!res) return;
+      client.send("skipOk", { row, side: res.side });
+      p.row = Math.max(p.row, row);
+      if (res.provedNow) this.broadcast("proven", { row, side: res.side, by: p.name });
+    });
+
+    // shop: assassination contract — kill a named player and wipe their progress
+    this.onMessage("assassinate", (client: Client, d: { target?: string }) => {
+      const killer = this.players.get(client.sessionId);
+      if (!killer) return;
+      const wanted = String(d?.target ?? "").trim().toLowerCase();
+      if (!wanted) { client.send("assassinateResult", { ok: false }); return; }
+      const entry = [...this.players.entries()].find(
+        ([id, p]) => id !== client.sessionId && p.name.toLowerCase() === wanted,
+      );
+      if (!entry) { client.send("assassinateResult", { ok: false }); return; }
+      const [targetId, targetP] = entry;
+      const targetClient = this.clients.find((c) => c.sessionId === targetId);
+      if (!targetClient) { client.send("assassinateResult", { ok: false }); return; }
+      targetClient.send("killed", { by: killer.name });
+      client.send("assassinateResult", { ok: true, target: targetP.name });
+      this.broadcast("assassinated", { by: killer.name, target: targetP.name });
+    });
+
     // gap/edge deaths are decided by the faller's own physics — relay for the feed
     this.onMessage("fell", (client: Client, d: { row?: number; cause?: string }) => {
       const p = this.players.get(client.sessionId);

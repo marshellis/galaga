@@ -57,6 +57,20 @@ export class GlassBridge {
    * Resolve a landing on `side` of `row`. Marks the row proven (safe hit) or
    * broken (fake hit). Returns null for out-of-range input.
    */
+  /**
+   * Reveal-and-prove a row without a landing (the shop's skip item). Returns
+   * the safe side so the client knows where to stand, plus whether this was
+   * the first reveal (worth broadcasting).
+   */
+  prove(row: number): { side: 0 | 1; provedNow: boolean } | null {
+    if (!Number.isInteger(row) || row < 1 || row > MAX_ROW) return null;
+    this.ensureRows(row + 40);
+    const r = this.rows[row - 1];
+    const provedNow = !r.proven;
+    r.proven = true;
+    return { side: r.safe, provedNow };
+  }
+
   land(row: number, side: number): LandOutcome | null {
     if (!Number.isInteger(row) || row < 1 || row > MAX_ROW) return null;
     if (side !== 0 && side !== 1) return null;

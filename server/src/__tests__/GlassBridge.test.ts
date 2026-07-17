@@ -55,6 +55,18 @@ describe("GlassBridge", () => {
     expect(r2).toMatchObject({ broken: true, proven: true });
   });
 
+  it("prove() reveals the safe side without a landing, once", () => {
+    const b = new GlassBridge(altRng());
+    const first = b.prove(3); // row 3 safe=0 with altRng
+    expect(first).toMatchObject({ side: 0, provedNow: true });
+    expect(b.prove(3)).toMatchObject({ side: 0, provedNow: false });
+    expect(b.revealed().find(r => r.row === 3)).toMatchObject({ safe: 0, proven: true });
+    // and landing on a proven row agrees with what prove() said
+    expect(b.land(3, 0)?.ok).toBe(true);
+    expect(b.prove(0)).toBeNull();
+    expect(b.prove(MAX_ROW + 1)).toBeNull();
+  });
+
   it("rejects garbage input", () => {
     const b = new GlassBridge();
     expect(b.land(0, 0)).toBeNull();
