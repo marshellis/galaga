@@ -105,6 +105,23 @@ export class GlassBridgeRoom extends Room {
       this.broadcast("assassinated", { by: killer.name, target: targetP.name });
     });
 
+    // shop: troll panel — slow / choke curses relayed to a named victim
+    this.onMessage("troll", (client: Client, d: { target?: string; kind?: string }) => {
+      const troll = this.players.get(client.sessionId);
+      if (!troll) return;
+      const kind = d?.kind === "slow" || d?.kind === "choke" ? d.kind : null;
+      const wanted = String(d?.target ?? "").trim().toLowerCase();
+      const entry = kind && wanted
+        ? [...this.players.entries()].find(([id, p]) => id !== client.sessionId && p.name.toLowerCase() === wanted)
+        : undefined;
+      if (!entry) { client.send("trollResult", { ok: false, kind }); return; }
+      const targetClient = this.clients.find((c) => c.sessionId === entry[0]);
+      if (!targetClient) { client.send("trollResult", { ok: false, kind }); return; }
+      targetClient.send("trolled", { kind, by: troll.name, dur: 20 });
+      client.send("trollResult", { ok: true, target: entry[1].name, kind });
+      this.broadcast("trollcast", { by: troll.name, target: entry[1].name, kind });
+    });
+
     // gap/edge deaths are decided by the faller's own physics — relay for the feed
     this.onMessage("fell", (client: Client, d: { row?: number; cause?: string }) => {
       const p = this.players.get(client.sessionId);
