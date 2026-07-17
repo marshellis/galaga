@@ -88,7 +88,8 @@ export class GlassBridgeRoom extends Room {
     });
 
     // shop: assassination contract — kill a named player and wipe their progress
-    this.onMessage("assassinate", (client: Client, d: { target?: string }) => {
+    // (d.r marks a reflected strike so the receiver won't re-reflect it)
+    this.onMessage("assassinate", (client: Client, d: { target?: string; r?: number }) => {
       const killer = this.players.get(client.sessionId);
       if (!killer) return;
       const wanted = String(d?.target ?? "").trim().toLowerCase();
@@ -100,13 +101,13 @@ export class GlassBridgeRoom extends Room {
       const [targetId, targetP] = entry;
       const targetClient = this.clients.find((c) => c.sessionId === targetId);
       if (!targetClient) { client.send("assassinateResult", { ok: false }); return; }
-      targetClient.send("killed", { by: killer.name });
+      targetClient.send("killed", { by: killer.name, r: d?.r ? 1 : 0 });
       client.send("assassinateResult", { ok: true, target: targetP.name });
       this.broadcast("assassinated", { by: killer.name, target: targetP.name });
     });
 
     // shop: troll panel — slow / choke curses relayed to a named victim
-    this.onMessage("troll", (client: Client, d: { target?: string; kind?: string }) => {
+    this.onMessage("troll", (client: Client, d: { target?: string; kind?: string; r?: number }) => {
       const troll = this.players.get(client.sessionId);
       if (!troll) return;
       const kind = d?.kind === "slow" || d?.kind === "choke" ? d.kind : null;
@@ -117,9 +118,30 @@ export class GlassBridgeRoom extends Room {
       if (!entry) { client.send("trollResult", { ok: false, kind }); return; }
       const targetClient = this.clients.find((c) => c.sessionId === entry[0]);
       if (!targetClient) { client.send("trollResult", { ok: false, kind }); return; }
-      targetClient.send("trolled", { kind, by: troll.name, dur: 20 });
+      targetClient.send("trolled", { kind, by: troll.name, dur: 20, r: d?.r ? 1 : 0 });
       client.send("trollResult", { ok: true, target: entry[1].name, kind });
       this.broadcast("trollcast", { by: troll.name, target: entry[1].name, kind });
+    });
+
+    // 🎡 the wheel of misfortune — forced onto a named victim's screen; the
+    // victim's client reports the outcome so the room can gloat
+    this.onMessage("wheel", (client: Client, d: { target?: string; r?: number }) => {
+      const sender = this.players.get(client.sessionId);
+      if (!sender) return;
+      const wanted = String(d?.target ?? "").trim().toLowerCase();
+      const entry = wanted
+        ? [...this.players.entries()].find(([id, p]) => id !== client.sessionId && p.name.toLowerCase() === wanted)
+        : undefined;
+      const targetClient = entry ? this.clients.find((c) => c.sessionId === entry[0]) : undefined;
+      if (!entry || !targetClient) { client.send("wheelResult", { ok: false }); return; }
+      targetClient.send("wheelSpin", { by: sender.name, r: d?.r ? 1 : 0 });
+      client.send("wheelResult", { ok: true, target: entry[1].name });
+    });
+
+    this.onMessage("wheelOutcome", (client: Client, d: { red?: boolean }) => {
+      const p = this.players.get(client.sessionId);
+      if (!p) return;
+      this.broadcast("wheelNews", { name: p.name, red: d?.red !== false });
     });
 
     // gap/edge deaths are decided by the faller's own physics — relay for the feed
