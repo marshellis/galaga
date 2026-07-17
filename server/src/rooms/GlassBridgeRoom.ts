@@ -79,6 +79,14 @@ export class GlassBridgeRoom extends Room {
       if (res.provedNow) this.broadcast("proven", { row, side: res.side, by: p.name });
     });
 
+    // shop: x-ray potion — a private peek at safe sides; reveals nothing to others
+    this.onMessage("xray", (client: Client, d: { from?: number; to?: number }) => {
+      const p = this.players.get(client.sessionId);
+      if (!p) return;
+      const rows = this.bridge.peek(Number(d?.from), Number(d?.to));
+      if (rows.length) client.send("xrayData", { rows });
+    });
+
     // shop: assassination contract — kill a named player and wipe their progress
     this.onMessage("assassinate", (client: Client, d: { target?: string }) => {
       const killer = this.players.get(client.sessionId);

@@ -71,6 +71,21 @@ export class GlassBridge {
     return { side: r.safe, provedNow };
   }
 
+  /**
+   * X-ray peek (the shop's 300-coin potion): read safe sides for a row range
+   * WITHOUT revealing/proving anything — a private answer to one client, never
+   * broadcast, and rows stay unrevealed for everyone else.
+   */
+  peek(from: number, to: number): { row: number; safe: 0 | 1 }[] {
+    const a = Math.max(1, Math.trunc(from));
+    const b = Math.min(MAX_ROW, Math.trunc(to), a + 120); // cap the span
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return [];
+    this.ensureRows(b + 10);
+    const out: { row: number; safe: 0 | 1 }[] = [];
+    for (let row = a; row <= b; row++) out.push({ row, safe: this.rows[row - 1].safe });
+    return out;
+  }
+
   land(row: number, side: number): LandOutcome | null {
     if (!Number.isInteger(row) || row < 1 || row > MAX_ROW) return null;
     if (side !== 0 && side !== 1) return null;

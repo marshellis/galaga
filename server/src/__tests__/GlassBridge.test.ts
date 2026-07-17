@@ -67,6 +67,18 @@ describe("GlassBridge", () => {
     expect(b.prove(MAX_ROW + 1)).toBeNull();
   });
 
+  it("peek() reads safe sides without revealing anything", () => {
+    const b = new GlassBridge(altRng());
+    const view = b.peek(1, 4);
+    expect(view).toEqual([
+      { row: 1, safe: 0 }, { row: 2, safe: 1 }, { row: 3, safe: 0 }, { row: 4, safe: 1 },
+    ]);
+    expect(b.revealed()).toEqual([]); // still a secret to everyone else
+    expect(b.land(1, 0)?.ok).toBe(true); // and peeks agree with reality
+    expect(b.peek(50, 40)).toEqual([]);
+    expect(b.peek(1, 1000).length).toBeLessThanOrEqual(121); // span cap
+  });
+
   it("rejects garbage input", () => {
     const b = new GlassBridge();
     expect(b.land(0, 0)).toBeNull();
