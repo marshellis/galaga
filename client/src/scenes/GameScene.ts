@@ -43,13 +43,13 @@ export class GameScene extends Phaser.Scene {
     this.inputHandler = new InputHandler(this);
   }
 
-  update() {
+  update(_time: number, delta: number) {
     this.inputHandler?.update();
     const state = colyseusClient.room?.state as unknown as GameState | undefined;
-    if (state) this.syncState(state);
+    if (state) this.syncState(state, delta);
   }
 
-  private syncState(state: GameState) {
+  private syncState(state: GameState, delta: number) {
     let playerX = 0, playerY = 0, playerCount = 0;
     try {
       state.players?.forEach((p: any) => {
@@ -87,13 +87,13 @@ export class GameScene extends Phaser.Scene {
     this.prevEnemyIds = currentIds;
 
     try {
-      if (state.players) this.playerRenderer.sync(state.players);
+      if (state.players) this.playerRenderer.sync(state.players, delta);
     } catch (e) { console.error("[galaga] playerRenderer error:", e); }
     try {
-      if (state.enemies) this.enemyRenderer.sync(state.enemies);
+      if (state.enemies) this.enemyRenderer.sync(state.enemies, delta);
     } catch (e) { console.error("[galaga] enemyRenderer error:", e); }
     try {
-      if (state.bullets) this.bulletRenderer.sync(state.bullets);
+      if (state.bullets) this.bulletRenderer.sync(state.bullets, delta);
     } catch (e) { console.error("[galaga] bulletRenderer error:", e); }
     this.hud.update(state, colyseusClient.room!.sessionId);
   }
