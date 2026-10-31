@@ -3,6 +3,7 @@ import { GameState } from "shared/schemas/GameState";
 import { PlayerState } from "shared/schemas/PlayerState";
 import { InputEvent, JoinOptions } from "shared/types/events";
 import { GameLoop } from "../game/GameLoop";
+import { identify, Identity } from "../auth/pass";
 import {
   GamePhase,
   GameMode,
@@ -94,10 +95,22 @@ export class GalagaRoom extends Room<GameState> {
     }, TICK_MS);
   }
 
-  onJoin(client: Client, options: JoinOptions = {}) {
+  // Who is joining? With GAME_PASS_SECRET set, the signed pass decides the name (see auth/pass.ts).
+  onAuth(_client: Client, options: JoinOptions = {}): Identity {
+    const id = identify(options);
+    if (!id) throw new Error("sign-in-required");
+    return id;
+  }
+
+  onJoin(client: Client, options: JoinOptions = {}, auth?: Identity) {
     const player = new PlayerState();
     player.sessionId = client.sessionId;
-    player.displayName = options.displayName ?? "Anonymous";
+    player.displayName = auth?.displayName ?? options.displayName ?? "Anonymous";
+    // A parent's play-time limit rides on the pass: when it expires, the player is removed.
+    if (auth?.expiresAt) {
+      const ms = Math.max(0, auth.expiresAt * 1000 - Date.now());
+      this.clock.setTimeout(() => client.leave(4003), ms);
+    }
     player.x = WORLD_W / 2;
     player.y = WORLD_H - 60;
     this.state.players.set(client.sessionId, player);
