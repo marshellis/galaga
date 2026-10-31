@@ -95,7 +95,7 @@ export class MenuScene extends Phaser.Scene {
         await colyseusClient.createRoom(mode, subType);
         this.scene.start("LobbyScene");
       } catch (e) {
-        this.statusText.setText("Could not connect to server.").setColor("#ff4444");
+        this.statusText.setText(e instanceof Error && e.message.startsWith("No play time") ? e.message : "Could not connect to server.").setColor("#ff4444");
         this.input.keyboard!.once("keydown-ENTER", () => this.drawCreate());
       }
     });
@@ -137,7 +137,7 @@ export class MenuScene extends Phaser.Scene {
           await colyseusClient.joinRoom(code);
           this.scene.start("LobbyScene");
         } catch (e) {
-          this.statusText.setText("Room not found.").setColor("#ff4444");
+          this.statusText.setText(e instanceof Error && e.message.startsWith("No play time") ? e.message : "Room not found.").setColor("#ff4444");
           this.codeChars = [];
           refreshCode();
           joining = false;
