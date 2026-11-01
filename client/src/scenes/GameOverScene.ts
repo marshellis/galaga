@@ -6,6 +6,8 @@ export class GameOverScene extends Phaser.Scene {
 
   create(data: { score: number; wave: number; winner?: string }) {
     colyseusClient.leave();
+    // A round is over: count it for the Marshellis learning loop (brain break every N rounds). No-op off the arcade.
+    (window as unknown as { MGRounds?: { end(): void } }).MGRounds?.end();
     const cx = this.scale.width / 2;
     const cy = this.scale.height / 2;
 
